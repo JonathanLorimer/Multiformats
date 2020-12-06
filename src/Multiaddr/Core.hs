@@ -14,6 +14,7 @@ type IPv6Addr = ( Word16, Word16, Word16, Word16
                 )
 
 type Zone = Text
+type UnixPath = [Text]
 
 data AddrPart where
   -- Protocol based addresses
@@ -30,7 +31,7 @@ data AddrPart where
   -- Onion3 ::  Word256 -> AddrPart -- Need Word296 in haskell to make this happen
 
   -- Variable length addresses
-  Unix ::  ByteString -> AddrPart
+  Unix ::  UnixPath -> AddrPart
   DNS ::  ByteString -> AddrPart
   DNS4 ::  ByteString -> AddrPart
   DNS6 ::  ByteString -> AddrPart

@@ -78,6 +78,12 @@ ipv6ZoneAddr = do
   zone <- many C.alphaNumChar
   pure (ipv6Address, T.pack zone)
 
+unixPathAddr :: MultiaddrHumanParser UnixPath
+unixPathAddr = fmap T.pack <$> (pathDelim >> sepBy (many (anySingleBut '/')) pathDelim)
+    where
+      pathDelim :: MultiaddrHumanParser Char
+      pathDelim = C.char '/'
+
 -- t1 = "2001:0db8:1111:000a:00b0:0000:0000:0200" :: Text
 -- t2 = "2001:db8:1111:a:b0::200" :: Text
 -- t3 = "2001:0db8:0000:0000:abcd:0000:0000:1234" :: Text
@@ -86,10 +92,12 @@ ipv6ZoneAddr = do
 -- t6 = "2001:db8:aaaa:1::100" :: Text
 -- t7 = "2001:0db8:aaaa:0001:0000:0000:0000:0200" :: Text
 -- t8 = "2001:db8:aaaa:1::200%eth2" :: Text
+--
+--
 
 ---- $> import Text.Megaparsec
 --
----- $> runParser ipv6ZoneAddr "hello" t8
+---- $> runParser unixPathAddr "hello" "/path/to/my/dirs/file.hs"
 
 mkPart :: MultiaddrHumanParser (a -> AddrPart) -> MultiaddrHumanParser a -> MultiaddrHumanParser AddrPart
 mkPart ctorP addrP = do
@@ -128,7 +136,7 @@ onionPart :: MultiaddrHumanParser AddrPart
 onionPart = undefined
 
 unixPart :: MultiaddrHumanParser AddrPart
-unixPart = undefined
+unixPart = mkPart (Unix <$ C.string "unix") unixPathAddr
 
 dnsPart :: MultiaddrHumanParser AddrPart
 dnsPart = undefined
