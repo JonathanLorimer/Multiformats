@@ -1,0 +1,46 @@
+name: "Multiformats"
+version: 0.1.0
+synopsis: "A Haskell implementation of the multiformats specifictations"
+description: "See multiformats.io for more information about the specifications and implementations in other languages"
+maintainer: Jonathan Lorimer
+github: jonathanlorimer/Multiformats
+category: Formatting
+
+ghc-options: -Wall
+
+dependencies:
+  - base >= 4.9 && < 5
+  - binary
+  - binary-varint
+  - bytestring
+  - containers
+  - data-dword
+  - megaparsec
+  - relude
+  - text
+
+default-extensions:
+  - LambdaCase
+  - OverloadedStrings
+  - ScopedTypeVariables
+  - TupleSections
+  - MultiWayIf
+  - InstanceSigs
+  - RecordWildCards
+  - NamedFieldPuns
+  - StrictData
+  - GADTs
+
+library:
+  source-dirs: src
+  other-modules: []
+
+tests:
+  test:
+    main: Main.hs
+    source-dirs: test
+    dependencies:
+    - hspec
+    - hspec-expectations
+    - QuickCheck
+

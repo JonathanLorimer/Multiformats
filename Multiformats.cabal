@@ -1,0 +1,71 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 604828f331239462e2d748e55f15762ee839851d4e6e8405993bbe10f931a067
+
+name:           Multiformats
+version:        0.1.0
+synopsis:       A Haskell implementation of the multiformats specifictations
+description:    See multiformats.io for more information about the specifications and implementations in other languages
+category:       Formatting
+homepage:       https://github.com/jonathanlorimer/Multiformats#readme
+bug-reports:    https://github.com/jonathanlorimer/Multiformats/issues
+maintainer:     Jonathan Lorimer
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/jonathanlorimer/Multiformats
+
+library
+  exposed-modules:
+      Multiaddr
+      Multiaddr.Core
+      Multiaddr.Parser
+      Multibase
+      Multicodec
+      Multigram
+      Multihash
+      Multistream
+  hs-source-dirs:
+      src
+  default-extensions: LambdaCase OverloadedStrings ScopedTypeVariables TupleSections MultiWayIf InstanceSigs RecordWildCards NamedFieldPuns StrictData GADTs
+  ghc-options: -Wall
+  build-depends:
+      base >=4.9 && <5
+    , binary
+    , binary-varint
+    , bytestring
+    , containers
+    , data-dword
+    , megaparsec
+    , relude
+    , text
+  default-language: Haskell2010
+
+test-suite test
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      Paths_Multiformats
+  hs-source-dirs:
+      test
+  default-extensions: LambdaCase OverloadedStrings ScopedTypeVariables TupleSections MultiWayIf InstanceSigs RecordWildCards NamedFieldPuns StrictData GADTs
+  ghc-options: -Wall
+  build-depends:
+      QuickCheck
+    , base >=4.9 && <5
+    , binary
+    , binary-varint
+    , bytestring
+    , containers
+    , data-dword
+    , hspec
+    , hspec-expectations
+    , megaparsec
+    , relude
+    , text
+  default-language: Haskell2010
