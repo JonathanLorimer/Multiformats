@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 604828f331239462e2d748e55f15762ee839851d4e6e8405993bbe10f931a067
+-- hash: e5e8bb639d94d976cd56eac84304b5c0e1389c02c7572935719876214add2460
 
 name:           Multiformats
 version:        0.1.0
@@ -32,8 +32,8 @@ library
       Multistream
   hs-source-dirs:
       src
-  default-extensions: LambdaCase OverloadedStrings ScopedTypeVariables TupleSections MultiWayIf InstanceSigs RecordWildCards NamedFieldPuns StrictData GADTs
-  ghc-options: -Wall
+  default-extensions: LambdaCase OverloadedStrings ScopedTypeVariables TupleSections MultiWayIf InstanceSigs RecordWildCards NamedFieldPuns StrictData GADTs NoImplicitPrelude
+  ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-deriving-strategies -fdiagnostics-color=always +RTS -A128m -n2m -RTS
   build-depends:
       base >=4.9 && <5
     , binary
@@ -42,6 +42,7 @@ library
     , containers
     , data-dword
     , megaparsec
+    , parsec
     , relude
     , text
   default-language: Haskell2010
@@ -53,8 +54,8 @@ test-suite test
       Paths_Multiformats
   hs-source-dirs:
       test
-  default-extensions: LambdaCase OverloadedStrings ScopedTypeVariables TupleSections MultiWayIf InstanceSigs RecordWildCards NamedFieldPuns StrictData GADTs
-  ghc-options: -Wall
+  default-extensions: LambdaCase OverloadedStrings ScopedTypeVariables TupleSections MultiWayIf InstanceSigs RecordWildCards NamedFieldPuns StrictData GADTs NoImplicitPrelude
+  ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-export-lists -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-deriving-strategies -fdiagnostics-color=always +RTS -A128m -n2m -RTS
   build-depends:
       QuickCheck
     , base >=4.9 && <5
@@ -66,6 +67,7 @@ test-suite test
     , hspec
     , hspec-expectations
     , megaparsec
+    , parsec
     , relude
     , text
   default-language: Haskell2010

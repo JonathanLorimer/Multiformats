@@ -1,9 +1,6 @@
 module Multiaddr.Core where
 
-import GHC.Word
-import Data.DoubleWord
-import Data.ByteString (ByteString)
-import Data.Set
+import Relude
 import Data.Text (Text)
 
 type Multiaddr = Set AddrPart
@@ -13,6 +10,19 @@ type IPv6Addr = ( Word16, Word16, Word16, Word16
                 , Word16, Word16, Word16, Word16
                 )
 
+data OnionAddr =
+  OnionAddr
+    { onionPath :: Text
+    , onionPort :: Port
+    } deriving (Eq, Ord, Show)
+
+data Onion3Addr =
+  Onion3Addr
+    { onion3Path :: Text
+    , onion3Port :: Port
+    } deriving (Eq, Ord, Show)
+
+type Port = Word16
 type Zone = Text
 type UnixPath = [Text]
 
@@ -23,23 +33,23 @@ data AddrPart where
   IPv6Zone ::  (IPv6Addr, Zone)  -> AddrPart
 
   -- Port number addresses
-  TCP :: Word16 -> AddrPart
-  UDP ::  Word16 -> AddrPart
-  DCCP ::  Word16 -> AddrPart
-  SCTP ::  Word16 -> AddrPart
-  Onion ::  Word96 -> AddrPart
-  -- Onion3 ::  Word256 -> AddrPart -- Need Word296 in haskell to make this happen
+  TCP :: Port -> AddrPart
+  UDP ::  Port -> AddrPart
+  DCCP ::  Port -> AddrPart
+  SCTP ::  Port -> AddrPart
 
   -- Variable length addresses
-  Unix ::  UnixPath -> AddrPart
-  DNS ::  ByteString -> AddrPart
-  DNS4 ::  ByteString -> AddrPart
-  DNS6 ::  ByteString -> AddrPart
-  DNSAddr ::  ByteString -> AddrPart
-  P2P ::  ByteString -> AddrPart
-  Garlic64 ::  ByteString -> AddrPart
-  Garlic32 ::  ByteString -> AddrPart
-  Memory ::  ByteString -> AddrPart
+  Onion :: OnionAddr -> AddrPart
+  Onion3 :: Onion3Addr -> AddrPart -- Need Word296 in haskell to make this happen
+  Unix :: UnixPath -> AddrPart
+  DNS :: Text -> AddrPart
+  DNS4 :: Text -> AddrPart
+  DNS6 :: Text -> AddrPart
+  DNSAddr :: Text -> AddrPart
+  P2P :: Text -> AddrPart
+  Garlic64 :: Text -> AddrPart
+  Garlic32 :: Text -> AddrPart
+  Memory :: Text -> AddrPart
 
   -- Addressless Parts
   UDT :: AddrPart
@@ -76,6 +86,7 @@ toCode UTP = Code 302
 toCode (Unix _) = Code 400
 toCode (P2P _) = Code 421
 toCode (Onion _) = Code 444
+toCode (Onion3 _) = Code 445
 toCode (Garlic32 _) = Code 446
 toCode (Garlic64 _) = Code 447
 toCode QUIC = Code 460

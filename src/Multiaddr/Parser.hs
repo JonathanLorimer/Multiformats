@@ -1,12 +1,11 @@
 module Multiaddr.Parser where
 
+import Relude hiding (many)
 import Text.Megaparsec
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as C
-import Data.ByteString (ByteString)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Void
 import Control.Monad (void, guard)
 import Multiaddr.Core
 import GHC.Word (Word8, Word16)
@@ -15,12 +14,6 @@ type MultiaddrHumanParser = Parsec Void Text
 
 delim :: MultiaddrHumanParser Char
 delim = C.char '/'
-
-ip4 :: MultiaddrHumanParser (IPv4Addr -> AddrPart)
-ip4 = IPv4 <$ C.string "ip4"
-
-ip6 :: MultiaddrHumanParser (IPv6Addr -> AddrPart)
-ip6 = IPv6 <$ C.string "ip6"
 
 word :: Num a => Integer -> MultiaddrHumanParser Integer -> MultiaddrHumanParser a
 word limit subParser = do
@@ -82,8 +75,30 @@ unixPathAddr :: MultiaddrHumanParser UnixPath
 unixPathAddr = fmap T.pack <$> (pathDelim >> sepBy (many (anySingleBut '/')) pathDelim)
     where
       pathDelim :: MultiaddrHumanParser Char
-      pathDelim = C.char '/'
+      pathDelim = delim
 
+onionAddr :: MultiaddrHumanParser OnionAddr
+onionAddr = do
+  path <- T.pack <$> count 16 C.alphaNumChar
+  void portDelim
+  port <- decWord16
+  pure $ OnionAddr path port
+    where
+      portDelim :: MultiaddrHumanParser Char
+      portDelim = C.char ':'
+
+onion3Addr :: MultiaddrHumanParser Onion3Addr
+onion3Addr = do
+  path <- T.pack <$> count 52 C.alphaNumChar
+  void portDelim
+  port <- decWord16
+  pure $ Onion3Addr path port
+    where
+      portDelim :: MultiaddrHumanParser Char
+      portDelim = C.char ':'
+
+txtAddr :: MultiaddrHumanParser Text
+txtAddr = takeWhileP Nothing (not . (== '/'))
 -- t1 = "2001:0db8:1111:000a:00b0:0000:0000:0200" :: Text
 -- t2 = "2001:db8:1111:a:b0::200" :: Text
 -- t3 = "2001:0db8:0000:0000:abcd:0000:0000:1234" :: Text
@@ -97,7 +112,7 @@ unixPathAddr = fmap T.pack <$> (pathDelim >> sepBy (many (anySingleBut '/')) pat
 
 ---- $> import Text.Megaparsec
 --
----- $> runParser unixPathAddr "hello" "/path/to/my/dirs/file.hs"
+---- $> runParser txtAddr "hello" "www.ipfs.com/dns4"
 
 mkPart :: MultiaddrHumanParser (a -> AddrPart) -> MultiaddrHumanParser a -> MultiaddrHumanParser AddrPart
 mkPart ctorP addrP = do
@@ -111,10 +126,10 @@ mkAddresslessPart :: AddrPart -> Text -> MultiaddrHumanParser AddrPart
 mkAddresslessPart ctor str = mkPart (const ctor <$ C.string str) (pure ())
 
 ipv4Part :: MultiaddrHumanParser AddrPart
-ipv4Part = mkPart ip4 ipv4Addr
+ipv4Part = mkPart (IPv4 <$ C.string "ip4") ipv4Addr
 
 ipv6Part :: MultiaddrHumanParser AddrPart
-ipv6Part = mkPart ip6 ipv6Addr
+ipv6Part = mkPart (IPv6 <$ C.string "ip6") ipv6Addr
 
 ipv6ZonePart :: MultiaddrHumanParser AddrPart
 ipv6ZonePart = mkPart (IPv6Zone <$ C.string "ip6zone") ipv6ZoneAddr
@@ -131,36 +146,38 @@ dccpPart = mkPart (DCCP <$ C.string "dccp") decWord16
 sctpPart :: MultiaddrHumanParser AddrPart
 sctpPart = mkPart (SCTP <$ C.string "sctp") decWord16
 
--- TODO(jonathan): look into how onion addresses are encoded and implement
 onionPart :: MultiaddrHumanParser AddrPart
-onionPart = undefined
+onionPart = mkPart (Onion <$ C.string "onion") onionAddr
+
+onion3Part :: MultiaddrHumanParser AddrPart
+onion3Part = mkPart (Onion3 <$ C.string "onion3") onion3Addr
 
 unixPart :: MultiaddrHumanParser AddrPart
 unixPart = mkPart (Unix <$ C.string "unix") unixPathAddr
 
 dnsPart :: MultiaddrHumanParser AddrPart
-dnsPart = undefined
+dnsPart = mkPart (DNS <$ C.string "dns") txtAddr
 
 dns4Part :: MultiaddrHumanParser AddrPart
-dns4Part = undefined
+dns4Part = mkPart (DNS4 <$ C.string "dns4") txtAddr
 
 dns6Part :: MultiaddrHumanParser AddrPart
-dns6Part = undefined
+dns6Part = mkPart (DNS6 <$ C.string "dns6") txtAddr
 
-dns6AddrPart :: MultiaddrHumanParser AddrPart
-dns6AddrPart = undefined
+dnsAddrPart :: MultiaddrHumanParser AddrPart
+dnsAddrPart = mkPart (DNSAddr <$ C.string "dnsaddr") txtAddr
 
 p2pPart :: MultiaddrHumanParser AddrPart
-p2pPart = mkPart (P2P <$ (C.string "p2p" <|> C.string "ipfs")) (pure ("" :: ByteString))
+p2pPart = mkPart (P2P <$ (C.string "p2p" <|> C.string "ipfs")) txtAddr
 
 garlic64Part :: MultiaddrHumanParser AddrPart
-garlic64Part = undefined
+garlic64Part = mkPart (Garlic64 <$ C.string "garlic64") txtAddr
 
 garlic32Part :: MultiaddrHumanParser AddrPart
-garlic32Part = undefined
+garlic32Part = mkPart (Garlic32 <$ C.string "garlic32") txtAddr
 
 memoryPart :: MultiaddrHumanParser AddrPart
-memoryPart = undefined
+memoryPart = mkPart (Memory <$ C.string "memory") txtAddr
 
 udtPart :: MultiaddrHumanParser AddrPart
 udtPart = mkAddresslessPart UDT "udt"
