@@ -81,8 +81,7 @@ onionAddr :: MultiaddrHumanParser OnionAddr
 onionAddr = do
   path <- T.pack <$> count 16 C.alphaNumChar
   void portDelim
-  port <- decWord16
-  pure $ OnionAddr path port
+  OnionAddr path <$> decWord16
     where
       portDelim :: MultiaddrHumanParser Char
       portDelim = C.char ':'
@@ -91,14 +90,13 @@ onion3Addr :: MultiaddrHumanParser Onion3Addr
 onion3Addr = do
   path <- T.pack <$> count 52 C.alphaNumChar
   void portDelim
-  port <- decWord16
-  pure $ Onion3Addr path port
+  Onion3Addr path <$> decWord16
     where
       portDelim :: MultiaddrHumanParser Char
       portDelim = C.char ':'
 
 txtAddr :: MultiaddrHumanParser Text
-txtAddr = takeWhileP Nothing (not . (== '/'))
+txtAddr = takeWhileP Nothing (/= '/')
 -- t1 = "2001:0db8:1111:000a:00b0:0000:0000:0200" :: Text
 -- t2 = "2001:db8:1111:a:b0::200" :: Text
 -- t3 = "2001:0db8:0000:0000:abcd:0000:0000:1234" :: Text
@@ -119,8 +117,7 @@ mkPart ctorP addrP = do
   void delim
   constructor <- ctorP
   void $ optional delim
-  address <- addrP
-  pure $ constructor address
+  constructor <$> addrP
 
 mkAddresslessPart :: AddrPart -> Text -> MultiaddrHumanParser AddrPart
 mkAddresslessPart ctor str = mkPart (const ctor <$ C.string str) (pure ())
