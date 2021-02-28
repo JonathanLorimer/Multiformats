@@ -1,7 +1,7 @@
 module Multiaddr.Core where
 
-import Relude
-import Data.Text (Text)
+import Relude hiding (length)
+import Data.Text (Text, length)
 
 type Multiaddr = Set AddrPart
 
@@ -10,15 +10,25 @@ type IPv6Addr = ( Word16, Word16, Word16, Word16
                 , Word16, Word16, Word16, Word16
                 )
 
+newtype Text16 = Text16 { unText16 :: Text } deriving (Eq, Ord, Show)
+
+text16 :: Text -> Maybe Text16
+text16 t = if length t == 16 then Just (Text16 t) else Nothing
+
+newtype Text52 = Text52 { unText52 :: Text } deriving (Eq, Ord, Show)
+
+text52 :: Text -> Maybe Text52
+text52 t = if length t == 52 then Just (Text52 t) else Nothing
+
 data OnionAddr =
   OnionAddr
-    { onionPath :: Text
+    { onionPath :: Text16
     , onionPort :: Port
     } deriving (Eq, Ord, Show)
 
 data Onion3Addr =
   Onion3Addr
-    { onion3Path :: Text
+    { onion3Path :: Text52
     , onion3Port :: Port
     } deriving (Eq, Ord, Show)
 

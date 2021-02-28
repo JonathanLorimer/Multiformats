@@ -23,11 +23,9 @@ ghc-options:
 
 dependencies:
   - base >= 4.9 && < 5
-  - binary
-  - binary-varint
+  - cereal
   - bytestring
   - containers
-  - data-dword
   - megaparsec
   - relude
   - text
