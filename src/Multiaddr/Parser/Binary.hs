@@ -4,8 +4,15 @@ module Multiaddr.Parser.Binary where
 import Relude hiding (many)
 import Data.Serialize.Get
 import Data.Bits
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as E
 import Multiaddr.Core
 -- import GHC.Word (Word8, Word16)
+
+newtype VariableLength = VariableLength { unVarLength :: Int }
+
+getVarLength :: Get VariableLength
+getVarLength = VariableLength <$> getVarInt
 
 getVarInt :: (Integral a, Bits a) => Get a
 getVarInt = go 0 0
@@ -24,14 +31,24 @@ ipv4Addr = (,,,)
        <*> getWord8
 
 
--- ipv6Addr :: Get IPv6Addr
--- ipv6Addr = undefined
+ipv6Addr :: Get IPv6Addr
+ipv6Addr = (,,,,,,,)
+       <$> getWord16be
+       <*> getWord16be
+       <*> getWord16be
+       <*> getWord16be
+       <*> getWord16be
+       <*> getWord16be
+       <*> getWord16be
+       <*> getWord16be
 
--- ipv6ZoneAddr :: Get (IPv6Addr, Zone)
--- ipv6ZoneAddr = undefined
+ipv6ZoneAddr :: VariableLength -> Get (IPv6Addr, Zone)
+ipv6ZoneAddr VariableLength{..} =
+  let zoneLength = unVarLength - 16
+   in liftA2 (,) ipv6Addr (E.decodeUtf8 <$> getByteString zoneLength)
 
--- unixPathAddr :: Get UnixPath
--- unixPathAddr = undefined
+unixPathAddr :: VariableLength -> Get UnixPath
+unixPathAddr VariableLength{..} = T.splitOn "/" . E.decodeUtf8 <$> getByteString unVarLength
 
 -- onionAddr :: Get OnionAddr
 -- onionAddr = undefined
