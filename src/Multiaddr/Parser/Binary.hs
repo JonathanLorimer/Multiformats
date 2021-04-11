@@ -44,14 +44,18 @@ ipv6Addr = (,,,,,,,)
 
 ipv6ZoneAddr :: VariableLength -> Get (IPv6Addr, Zone)
 ipv6ZoneAddr VariableLength{..} =
-  let zoneLength = unVarLength - 16
+  let zoneLength = unVarLength - 128
    in liftA2 (,) ipv6Addr (E.decodeUtf8 <$> getByteString zoneLength)
 
 unixPathAddr :: VariableLength -> Get UnixPath
 unixPathAddr VariableLength{..} = T.splitOn "/" . E.decodeUtf8 <$> getByteString unVarLength
 
--- onionAddr :: Get OnionAddr
--- onionAddr = undefined
+onionAddr :: Get OnionAddr
+onionAddr = E.decodeUtf8 <$> getByteString 96
+
+-- $> import Data.Serialize.Get
+
+-- $> runGet (getByteString 16) "12345678901234567"
 
 -- onion3Addr :: Get Onion3Addr
 -- onion3Addr = undefined
