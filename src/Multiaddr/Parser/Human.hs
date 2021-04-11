@@ -1,14 +1,14 @@
 module Multiaddr.Parser.Human where
 
+import Control.Monad (guard, void)
+import Data.Text (Text)
+import qualified Data.Text as T
+import GHC.Word (Word16, Word8)
+import Multiaddr.Core
 import Relude hiding (many)
 import Text.Megaparsec
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as C
-import Data.Text (Text)
-import qualified Data.Text as T
-import Control.Monad (void, guard)
-import Multiaddr.Core
-import GHC.Word (Word8, Word16)
 
 type MultiaddrHumanParser = Parsec Void Text
 
@@ -43,8 +43,8 @@ ipv4Addr =
     <*> (ipDelim >> decWord8)
     <*> (ipDelim >> decWord8)
     <*> (ipDelim >> decWord8)
-    where
-      ipDelim = C.char '.'
+  where
+    ipDelim = C.char '.'
 
 ipv6Addr :: MultiaddrHumanParser IPv6Addr
 ipv6Addr = do
@@ -52,14 +52,11 @@ ipv6Addr = do
   -- Handles double colon scenario
   void $ optional ipDelim
   end <- sepBy hexWord16 ipDelim
-
   let len = length beginning + length end
   guard (len <= 8)
-
   case beginning <> replicate (8 - len) 0 <> end of
-    [a,b,c,d,e,f,g,h] -> pure (a,b,c,d,e,f,g,h)
+    [a, b, c, d, e, f, g, h] -> pure (a, b, c, d, e, f, g, h)
     _ -> fail "ipv6 address of incorrect length"
-
   where
     ipDelim :: MultiaddrHumanParser Char
     ipDelim = C.char ':'
@@ -73,33 +70,33 @@ ipv6ZoneAddr = do
 
 unixPathAddr :: MultiaddrHumanParser UnixPath
 unixPathAddr = fmap T.pack <$> (pathDelim >> sepBy (many (anySingleBut '/')) pathDelim)
-    where
-      pathDelim :: MultiaddrHumanParser Char
-      pathDelim = delim
+  where
+    pathDelim :: MultiaddrHumanParser Char
+    pathDelim = delim
 
 onionAddr :: MultiaddrHumanParser OnionAddr
 onionAddr = do
   mPath <- text16 . T.pack <$> count 16 C.alphaNumChar
   let path = case mPath of
-               Just p -> p
-               Nothing -> error "onionAddr failed, path was not 16 characters (this should never happen)"
+        Just p -> p
+        Nothing -> error "onionAddr failed, path was not 16 characters (this should never happen)"
   void portDelim
   OnionAddr path <$> decWord16
-    where
-      portDelim :: MultiaddrHumanParser Char
-      portDelim = C.char ':'
+  where
+    portDelim :: MultiaddrHumanParser Char
+    portDelim = C.char ':'
 
 onion3Addr :: MultiaddrHumanParser Onion3Addr
 onion3Addr = do
   mPath <- text52 . T.pack <$> count 52 C.alphaNumChar
   let path = case mPath of
-               Just p -> p
-               Nothing -> error "onion3Addr failed, path was not 52 characters (this should never happen)"
+        Just p -> p
+        Nothing -> error "onion3Addr failed, path was not 52 characters (this should never happen)"
   void portDelim
   Onion3Addr path <$> decWord16
-    where
-      portDelim :: MultiaddrHumanParser Char
-      portDelim = C.char ':'
+  where
+    portDelim :: MultiaddrHumanParser Char
+    portDelim = C.char ':'
 
 txtAddr :: MultiaddrHumanParser Text
 txtAddr = takeWhileP Nothing (/= '/')

@@ -1,15 +1,17 @@
 {-# LANGUAGE BangPatterns #-}
+
 module Multiaddr.Parser.Binary where
 
-import Relude hiding (many)
-import Data.Serialize.Get
 import Data.Bits
+import Data.Serialize.Get
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as E
 import Multiaddr.Core
+import Relude hiding (many)
+
 -- import GHC.Word (Word8, Word16)
 
-newtype VariableLength = VariableLength { unVarLength :: Int }
+newtype VariableLength = VariableLength {unVarLength :: Int}
 
 getVarLength :: Get VariableLength
 getVarLength = VariableLength <$> getVarInt
@@ -18,37 +20,38 @@ getVarInt :: (Integral a, Bits a) => Get a
 getVarInt = go 0 0
   where
     go n !val = do
-        b <- getWord8
-        if testBit b 7
-          then go (n + 7) (val .|. (fromIntegral (b .&. 0x7F) `shiftL` n))
-          else return $! val .|. (fromIntegral b `shiftL` n)
+      b <- getWord8
+      if testBit b 7
+        then go (n + 7) (val .|. (fromIntegral (b .&. 0x7F) `shiftL` n))
+        else return $! val .|. (fromIntegral b `shiftL` n)
 
 ipv4Addr :: Get IPv4Addr
-ipv4Addr = (,,,)
-       <$> getWord8
-       <*> getWord8
-       <*> getWord8
-       <*> getWord8
-
+ipv4Addr =
+  (,,,)
+    <$> getWord8
+    <*> getWord8
+    <*> getWord8
+    <*> getWord8
 
 ipv6Addr :: Get IPv6Addr
-ipv6Addr = (,,,,,,,)
-       <$> getWord16be
-       <*> getWord16be
-       <*> getWord16be
-       <*> getWord16be
-       <*> getWord16be
-       <*> getWord16be
-       <*> getWord16be
-       <*> getWord16be
+ipv6Addr =
+  (,,,,,,,)
+    <$> getWord16be
+    <*> getWord16be
+    <*> getWord16be
+    <*> getWord16be
+    <*> getWord16be
+    <*> getWord16be
+    <*> getWord16be
+    <*> getWord16be
 
 ipv6ZoneAddr :: VariableLength -> Get (IPv6Addr, Zone)
-ipv6ZoneAddr VariableLength{..} =
+ipv6ZoneAddr VariableLength {..} =
   let zoneLength = unVarLength - 128
    in liftA2 (,) ipv6Addr (E.decodeUtf8 <$> getByteString zoneLength)
 
 unixPathAddr :: VariableLength -> Get UnixPath
-unixPathAddr VariableLength{..} = T.splitOn "/" . E.decodeUtf8 <$> getByteString unVarLength
+unixPathAddr VariableLength {..} = T.splitOn "/" . E.decodeUtf8 <$> getByteString unVarLength
 
 onionAddr :: Get OnionAddr
 onionAddr = E.decodeUtf8 <$> getByteString 96
