@@ -1,6 +1,6 @@
 {
   system ? builtins.currentSystem,
-  compilerVersion ? "ghc865",
+  compilerVersion ? "ghc8104",
   nixpkgs ? import ./nix/pinned-nixpkgs.nix,
   doCheck ? false,
   doHaddock ? false,
